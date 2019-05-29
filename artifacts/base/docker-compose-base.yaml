@@ -1,0 +1,156 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+
+  orderer.silverlake.co.in:
+    container_name: orderer.silverlake.co.in
+    image: hyperledger/fabric-orderer:$IMAGE_TAG
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
+      - ORDERER_KAFKA_VERBOSE=true
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+    - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+    - ../crypto-config/ordererOrganizations/silverlake.co.in/orderers/orderer.silverlake.co.in/msp:/var/hyperledger/orderer/msp
+    - ../crypto-config/ordererOrganizations/silverlake.co.in/orderers/orderer.silverlake.co.in/tls/:/var/hyperledger/orderer/tls
+    - orderer.silverlake.co.in:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+
+  peer0.apollo1.silverlake.co.in:
+    container_name: peer0.apollo1.silverlake.co.in
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.apollo1.silverlake.co.in
+      - CORE_PEER_ADDRESS=peer0.apollo1.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.apollo1.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.apollo1.silverlake.co.in:7051
+      - CORE_PEER_LOCALMSPID=Apollo1MSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/apollo1.silverlake.co.in/peers/peer0.apollo1.silverlake.co.in/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/apollo1.silverlake.co.in/peers/peer0.apollo1.silverlake.co.in/tls:/etc/hyperledger/fabric/tls
+        - peer0.apollo1.silverlake.co.in:/var/hyperledger/production
+    ports:
+      - 7051:7051
+      - 7053:7053
+
+  peer1.apollo1.silverlake.co.in:
+    container_name: peer1.apollo1.silverlake.co.in
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.apollo1.silverlake.co.in
+      - CORE_PEER_ADDRESS=peer1.apollo1.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.apollo1.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.apollo1.silverlake.co.in:7051
+      - CORE_PEER_LOCALMSPID=Apollo1MSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/apollo1.silverlake.co.in/peers/peer1.apollo1.silverlake.co.in/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/apollo1.silverlake.co.in/peers/peer1.apollo1.silverlake.co.in/tls:/etc/hyperledger/fabric/tls
+        - peer1.apollo1.silverlake.co.in:/var/hyperledger/production
+
+    ports:
+      - 8051:7051
+      - 8053:7053
+
+  peer0.manipal2.silverlake.co.in:
+    container_name: peer0.manipal2.silverlake.co.in
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.manipal2.silverlake.co.in
+      - CORE_PEER_ADDRESS=peer0.manipal2.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.manipal2.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.manipal2.silverlake.co.in:7051
+      - CORE_PEER_LOCALMSPID=Manipal2MSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/manipal2.silverlake.co.in/peers/peer0.manipal2.silverlake.co.in/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/manipal2.silverlake.co.in/peers/peer0.manipal2.silverlake.co.in/tls:/etc/hyperledger/fabric/tls
+        - peer0.manipal2.silverlake.co.in:/var/hyperledger/production
+    ports:
+      - 9051:7051
+      - 9053:7053
+
+  peer1.manipal2.silverlake.co.in:
+    container_name: peer1.manipal2.silverlake.co.in
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.manipal2.silverlake.co.in
+      - CORE_PEER_ADDRESS=peer1.manipal2.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.manipal2.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.manipal2.silverlake.co.in:7051
+      - CORE_PEER_LOCALMSPID=Manipal2MSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/manipal2.silverlake.co.in/peers/peer1.manipal2.silverlake.co.in/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/manipal2.silverlake.co.in/peers/peer1.manipal2.silverlake.co.in/tls:/etc/hyperledger/fabric/tls
+        - peer1.manipal2.silverlake.co.in:/var/hyperledger/production
+    ports:
+      - 10051:7051
+      - 10053:7053
+
+  peer0.fortis3.silverlake.co.in:
+    container_name: peer0.fortis3.silverlake.co.in
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.fortis3.silverlake.co.in
+      - CORE_PEER_ADDRESS=peer0.fortis3.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.fortis3.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.fortis3.silverlake.co.in:7051
+      - CORE_PEER_LOCALMSPID=Fortis3MSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/fortis3.silverlake.co.in/peers/peer0.fortis3.silverlake.co.in/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/fortis3.silverlake.co.in/peers/peer0.fortis3.silverlake.co.in/tls:/etc/hyperledger/fabric/tls
+        - peer0.fortis3.silverlake.co.in:/var/hyperledger/production
+    ports:
+      - 11051:7051
+      - 11053:7053
+
+  peer1.fortis3.silverlake.co.in:
+    container_name: peer1.fortis3.silverlake.co.in
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.fortis3.silverlake.co.in
+      - CORE_PEER_ADDRESS=peer1.fortis3.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.fortis3.silverlake.co.in:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.fortis3.silverlake.co.in:7051
+      - CORE_PEER_LOCALMSPID=Fortis3MSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/fortis3.silverlake.co.in/peers/peer1.fortis3.silverlake.co.in/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/fortis3.silverlake.co.in/peers/peer1.fortis3.silverlake.co.in/tls:/etc/hyperledger/fabric/tls
+        - peer1.fortis3.silverlake.co.in:/var/hyperledger/production
+    ports:
+      - 12051:7051
+      - 12053:7053      
