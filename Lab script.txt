@@ -1,0 +1,98 @@
+Artifacts Location:in your VM Desktop, Hyperledgerlabs/artifacts
+
+Lab1: installing the Prerequisites:
+ 
+sudo apt update
+sudo apt install golang-go
+sudo go version 
+sudo apt install docker.io
+sudo docker -v 
+sudo apt install docker-compose 
+sudo apt install nodejs 
+sudo node -v
+sudo apt install npm
+sudo npm install npm@5.6.0 -g 
+sudo npm -v
+curl -sSL http://bit.ly/2ysbOFE | bash -s 1.4.0 
+
+Lab2: Creating Organisations and Peers
+
+copy and replace the crypto-config.yaml,configtx.yaml files from artifacts to fabric-samples/first-network
+sudo su
+../bin/cryptogen generate --config=./crypto-config.yaml
+../bin/configtxgen -profile TwoOrgsOrdererGenesis -channelID byfn-sys-channel -outputBlock ./channel-artifacts/genesis.block 
+
+export CHANNEL_NAME=mychannel 
+ ../bin/configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID $CHANNEL_NAME 
+ 
+ ../bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Apollo1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Apollo1MSP  
+
+../bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Manipal2MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Manipal2MSP 
+
+../bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Fortis3MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Fortis3MSP 
+
+Copy the docker-compose-base.yaml from artifacts/base  to first-network/base. 
+
+Copy the docker-compose-cli.yaml from artifacts  to first-network. 
+
+Lab3 : Creating Chanel and joining Peers
+sudo su
+docker-compose -f docker-compose-cli.yaml up –d 
+docker exec -it cli bash
+
+export ORDERERCA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/silverlake.co.in/orderers/orderer.silverlake.co.in/msp/tlscacerts/tlsca.silverlake.co.in-cert.pem 
+export CHANNEL_NAME=mychannel
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/apollo1.silverlake.co.in/users/Admin@apollo1.silverlake.co.in/msp 
+export CORE_PEER_ADDRESS=peer0.apollo1.silverlake.co.in:7051 
+export CORE_PEER_LOCALMSPID="Apollo1MSP" 
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/apollo1.silverlake.co.in/peers/peer0.apollo1.silverlake.co.in/tls/ca.crt 
+
+peer channel create -o orderer.silverlake.co.in:7050 -c $CHANNEL_NAME -f ./channel-artifacts/channel.tx --tls --cafile $ORDERERCA  
+
+peer channel join -b mychannel.block 
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manipal2.silverlake.co.in/users/Admin@manipal2.silverlake.co.in/msp 
+export CORE_PEER_ADDRESS=peer0.manipal2.silverlake.co.in:7051 
+export CORE_PEER_LOCALMSPID="Manipal2MSP" 
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manipal2.silverlake.co.in/peers/peer0.manipal2.silverlake.co.in/tls/ca.crt 
+
+peer channel join -b mychannel.block 
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/fortis3.silverlake.co.in/users/Admin@fortis3.silverlake.co.in/msp 
+export CORE_PEER_ADDRESS=peer0.fortis3.silverlake.co.in:7051 
+export CORE_PEER_LOCALMSPID="Fortis3MSP" 
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/fortis3.silverlake.co.in/peers/peer0.fortis3.silverlake.co.in/tls/ca.crt 
+
+peer channel join -b mychannel.block
+
+peer channel getinfo -c  mychannel 
+
+Lab4 : Installing & Instantiating Chaincode
+sudo su
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/apollo1.silverlake.co.in/users/Admin@apollo1.silverlake.co.in/msp  
+export CORE_PEER_ADDRESS=peer0.apollo1.silverlake.co.in:7051 
+export CORE_PEER_LOCALMSPID="Apollo1MSP" 
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/apollo1.silverlake.co.in/peers/peer0.apollo1.silverlake.co.in/tls/ca.crt 
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/ 
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manipal2.silverlake.co.in/users/Admin@manipal2.silverlake.co.in/msp 
+export CORE_PEER_ADDRESS=peer0.manipal2.silverlake.co.in:7051 
+export CORE_PEER_LOCALMSPID="Manipal2MSP" 
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/manipal2.silverlake.co.in/peers/peer0.manipal2.silverlake.co.in/tls/ca.crt 
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/ 
+
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/fortis3.silverlake.co.in/users/Admin@fortis3.silverlake.co.in/msp 
+export CORE_PEER_ADDRESS=peer0.fortis3.silverlake.co.in:7051 
+export CORE_PEER_LOCALMSPID="Fortis3MSP" 
+export CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/fortis3.silverlake.co.in/peers/peer0.fortis3.silverlake.co.in/tls/ca.crt 
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/ 
+
+peer chaincode list -C mychannel -- installed 
+
+peer chaincode instantiate -o orderer.silverlake.co.in:7050 --tls –cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/silverlake.co.in/orderers/orderer.silverlake.co.in/msp/tlscacerts/tlsca.silverlake.co.in-cert.pem -C $CHANNEL_NAME -n mycc -v 1.0 -c '{"Args":["init","patient-a-has", "100", "patient-b-has","200"]}' -P "OR ('Apollo1MSP.peer','Manipal2MSP.peer','Fortis3MSP.peer')" 
+
+peer chaincode query -C mychannel -n mycc -c '{"Args":["query","patient-a-has"]}' 
